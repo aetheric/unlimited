@@ -1,0 +1,5 @@
+= Unlimited
+
+This project is for creating a rust library for interacting with the
+UnlimitedHand user interface device.
+
