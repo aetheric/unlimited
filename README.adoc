@@ -1,5 +1,7 @@
 = Unlimited
 
+image:https://travis-ci.org/aetheric/unlimited.svg?branch=master["Build Status", link="https://travis-ci.org/aetheric/unlimited"]
+
 This project is for creating a rust library for interacting with the
 UnlimitedHand user interface device.
 
