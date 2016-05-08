@@ -1,0 +1,18 @@
+[package]
+name = "unlimited"
+version = "0.1.0"
+description = "Connect with unlimitedhand"
+authors = [ "pcummuskey <pcummuskey@bravurasolutions.com>" ]
+repository = "git@github.com:aetheric/unlimited.git"
+readme = "README.adoc"
+license = "MIT"
+keywords = [
+	"unlimitedhand",
+	"bluetooth",
+	"serial",
+	"driver"
+]
+
+[dependencies]
+bluetooth = "0.0.1"
+serial = "0.3.3"
