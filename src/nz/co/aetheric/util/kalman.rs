@@ -43,10 +43,10 @@ pub struct Kalman {
 
 }
 
-impl Kalman {
+impl Default for Kalman {
 
 	#[allow(dead_code)]
-	pub fn new() -> Kalman {
+	fn default() -> Kalman {
 		Kalman {
 
 			/* We will set the variables like so, these can also be tuned by the user */
@@ -66,6 +66,10 @@ impl Kalman {
 
 		}
 	}
+
+}
+
+impl Kalman {
 
 	/**
 	 * KasBot V2  -  Kalman filter module - http://www.x-firm.com/?page_id=145
