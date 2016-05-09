@@ -135,7 +135,7 @@ pub const EMS_S2_PIN: u8 = 6;
 pub const MAX_VOL: u8 = 12; //relation_V_Delay.length;
 pub const MIN_VOL: u8 = 0;
 pub const BOOSTER_SWITCH_PIN: u8 = 9; //switch pin :;
-pub const relation_V_Delay: [ u8, 13 ] = [ 60, 40, 30, 22, 17, 13, 10, 7, 5, 4, 3, 2, 1 ];
+pub const relation_V_Delay: [ u8; 13 ] = [ 60, 40, 30, 22, 17, 13, 10, 7, 5, 4, 3, 2, 1 ];
 
 // EMS PATTERN SETUP
 pub const DEF_STIMU_TIME_COUNT: u16 = 200; //200

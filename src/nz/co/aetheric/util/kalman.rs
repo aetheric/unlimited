@@ -18,46 +18,48 @@
 pub struct Kalman {
 
 	/** Process noise variance for the accelerometer */
-	Q_angle: f32,
+	pub q_angle: f32,
 
 	/** Process noise variance for the gyro bias */
-	Q_bias: f32,
+	pub q_bias: f32,
 
 	/** Measurement noise variance - this is actually the variance of the measurement noise */
-	R_measure: f32,
+	pub r_measure: f32,
 
 
 	/** The angle calculated by the Kalman filter - part of the 2x1 state vector */
-	angle: f32,
+	pub angle: f32,
 
 	/** The gyro bias calculated by the Kalman filter - part of the 2x1 state vector */
-	bias: f32,
+	pub bias: f32,
 
 	/** Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate */
-	rate: f32,
+	#[allow(dead_code)]
+	pub rate: f32,
 
 
 	/** Error covariance matrix - This is a 2x2 matrix */
-	P: [ [ f32; 2 ]; 2 ],
+	pub p: [ [ f32; 2 ]; 2 ],
 
 }
 
 impl Kalman {
 
+	#[allow(dead_code)]
 	pub fn new() -> Kalman {
 		Kalman {
 
 			/* We will set the variables like so, these can also be tuned by the user */
-			Q_angle: 0.001f32,
-			Q_bias: 0.003f32,
-			R_measure: 0.03f32,
+			q_angle: 0.001f32,
+			q_bias: 0.003f32,
+			r_measure: 0.03f32,
 
 			angle: 0.0f32, // Reset the angle
 			bias: 0.0f32, // Reset bias
 			rate: 0.0f32,
 
 			// Since we assume that the bias is 0 and we know the starting angle (use setAngle), the error covariance matrix is set like so - see: http://en.wikipedia.org/wiki/Kalman_filter#Example_application.2C_technical
-			P: [
+			p: [
 				[ 0.0f32, 0.0f32 ],
 				[ 0.0f32, 0.0f32 ],
 			]
@@ -70,55 +72,91 @@ impl Kalman {
 	 * Modified by Kristian Lauszus
 	 * See my blog post for more information: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it
 	 * The angle should be in degrees and the rate should be in degrees per second and the delta time in seconds
-	 * @param newAngle degrees
-	 * @param newRate degrees / second
+	 * @param angleUpdate degrees
+	 * @param rateUpdate degrees / second
 	 * @param dt (delta time) seconds
 	 */
-	pub fn getAngle(&self, newAngle: f32, newRate: f32, dt: f32) -> f32 {
+	#[allow(dead_code)]
+	pub fn update(&self, angle_update: f32, rate_update: f32, dt: f32) -> Kalman {
 
 		// Discrete Kalman filter time update equations - Time Update ("Predict")
 		// Update xhat - Project the state ahead
 		/* Step 1 */
-		self.rate = newRate - self.bias;
-		self.angle += dt * self.rate;
+		let new_rate = rate_update - self.bias;
+		let new_angle = self.angle + dt * new_rate;
 
 		// Update estimation error covariance - Project the error covariance ahead
 		/* Step 2 */
-		self.P[0][0] += dt * ( dt * self.P[1][1] - self.P[0][1] - self.P[1][0] + self.Q_angle);
-		self.P[0][1] -= dt * self.P[1][1];
-		self.P[1][0] -= dt * self.P[1][1];
-		self.P[1][1] += self.Q_bias * dt;
+		let new_p = [
+			[
+				self.p[0][0] + dt * ( dt * self.p[1][1] - self.p[0][1] - self.p[1][0] + self.q_angle),
+				self.p[0][1] - dt * self.p[1][1]
+			],
+			[
+				self.p[1][0] - dt * self.p[1][1],
+				self.p[1][1] + self.q_bias * dt
+			]
+		];
+
+		// Calculate angle and bias - Update estimate with measurement zk (angleUpdate)
+		/* Step 3 */
+		let y = angle_update - new_angle; // Angle difference
 
 		// Discrete Kalman filter measurement update equations - Measurement Update ("Correct")
 		// Calculate Kalman gain - Compute the Kalman gain
 		/* Step 4 */
-		let S: f32 = self.P[0][0] + self.R_measure; // Estimate error
+		let s = new_p[0][0] + self.r_measure; // Estimate error
 
 		/* Step 5 */
-		let K: [ f32; 2 ] = [ // Kalman gain - This is a 2x1 vector
-			self.P[0][0] / S,
-			self.P[1][0] / S
+		let k = [ // Kalman gain - This is a 2x1 vector
+			new_p[0][0] / s,
+			new_p[1][0] / s
 		];
 
-		// Calculate angle and bias - Update estimate with measurement zk (newAngle)
-		/* Step 3 */
-		let y: f32 = newAngle - self.angle; // Angle difference
+		return Kalman {
 
-		/* Step 6 */
-		self.angle += K[0] * y;
-		self.bias += K[1] * y;
+			rate: new_rate,
 
-		// Calculate estimation error covariance - Update the error covariance
-		/* Step 7 */
-		let P00_temp: f32 = self.P[0][0];
-		let P01_temp: f32 = self.P[0][1];
+			/* Step 6 */
+			angle: new_angle + k[0] * y,
+			bias: self.bias + k[1] * y,
 
-		self.P[0][0] -= K[0] * P00_temp;
-		self.P[0][1] -= K[0] * P01_temp;
-		self.P[1][0] -= K[1] * P00_temp;
-		self.P[1][1] -= K[1] * P01_temp;
+			// Calculate estimation error covariance - Update the error covariance
+			/* Step 7 */
+			p: [
+				[
+					new_p[0][0] - k[0] * new_p[0][0],
+					new_p[0][1] - k[0] * new_p[0][1]
+				],
+				[
+					new_p[1][0] - k[1] * new_p[0][0],
+					new_p[1][1] - k[1] * new_p[0][1]
+				]
+			],
 
-		return self.angle;
+			.. *self
+
+		};
+	}
+
+	#[allow(dead_code)]
+	pub fn angle(&self, update: f32) -> Kalman {
+		return Kalman { angle: update, .. *self };
+	}
+
+	#[allow(dead_code)]
+	pub fn q_angle(&self, update: f32) -> Kalman {
+		return Kalman { q_angle: update, .. *self };
+	}
+
+	#[allow(dead_code)]
+	pub fn q_bias(&self, update: f32) -> Kalman {
+		return Kalman { q_bias: update, .. *self };
+	}
+
+	#[allow(dead_code)]
+	pub fn r_measure(&self, update: f32) -> Kalman {
+		return Kalman { r_measure: update, .. *self };
 	}
 
 }
