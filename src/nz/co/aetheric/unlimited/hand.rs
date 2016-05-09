@@ -1,10 +1,69 @@
-use self::kalman::Kalman;
+/** */
 
-pub impl UH {
+use nz::co::aetheric::util::kalman::Kalman;
+use nz::co::aetheric::util::point::Point2;
+use nz::co::aetheric::util::point::Point3;
+
+pub struct UH {
+
+	/** ??? */
+	kalman: Point2<Kalman>,
+
+
+	/** IMU Data */
+	acc: Point3<f64>,
+
+
+	/** ??? */
+	gyro: Point3<f64>,
+
+	/** Angle calculated using the gyro only */
+	gyro_angle: Point3<f64>,
+
+	/** Calculated angle using a complementary filter */
+	comp_angle: Point2<f64>,
+
+	/** Calculated angle using a Kalman filter */
+	kal_angle: Point2<f64>,
+
+
+	/** ??? */
+	timer: u32,
+
+
+	/** ??? */
+	roll: f32,
+
+	/** ??? */
+	pitch: f32,
+
+
+	/** ??? */
+	current_ems_channel: i32,
+
+	/** ??? */
+	ems_time_count: i32,
+
+	/** ??? */
+	stimu_high_wid: i32,
+
+	/** ??? */
+	stimu_low_wid: i32,
+
+	/** ??? */
+	stimu_time_count: i32,
+
+	/** ??? */
+	current_vol: i32
+
+}
+
+
+impl UH {
 
 	pub fn new() -> UH {
 		UH {
-		// stuff
+			// stuff
 		}
 	}
 
