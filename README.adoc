@@ -1,6 +1,7 @@
 = Unlimited
 
 image:https://travis-ci.org/aetheric/unlimited.svg?branch=master["Build Status", link="https://travis-ci.org/aetheric/unlimited"]
+image:https://coveralls.io/repos/github/aetheric/unlimited/badge.svg?branch=master["Coverage Status", link="https://coveralls.io/github/aetheric/unlimited?branch=master"]
 
 This project is for creating a rust library for interacting with the
 UnlimitedHand user interface device.
