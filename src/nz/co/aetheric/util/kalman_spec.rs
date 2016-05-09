@@ -1,10 +1,11 @@
 
-use nz::co::aetheric::util::kalman::Kalman as Kalman;
+#[allow(unused_imports)]
+use nz::co::aetheric::util::kalman::Kalman;
 
 #[test]
 fn default_kalman() {
 
-	let kalman: Kalman = Kalman::new(); {
+	let kalman = Kalman::new(); {
 		assert_eq!(0.001f32, kalman.q_angle);
 		assert_eq!(0.003f32, kalman.q_bias);
 		assert_eq!(0.03f32, kalman.r_measure);
@@ -22,11 +23,11 @@ fn default_kalman() {
 #[test]
 fn mutable_kalman_angle() {
 
-	let kalman: Kalman = Kalman::new(); {
+	let kalman = Kalman::new(); {
 		assert_eq!(0.0f32, kalman.angle);
 	}
 
-	let result: Kalman = kalman.angle(0.5f32); {
+	let result = kalman.angle(0.5f32); {
 		assert_eq!(0.5f32, result.angle);
 	}
 
@@ -35,11 +36,11 @@ fn mutable_kalman_angle() {
 #[test]
 fn mutable_kalman_q_angle() {
 
-	let kalman: Kalman = Kalman::new(); {
-		assert_eq!(0.0f32, kalman.q_angle);
+	let kalman = Kalman::new(); {
+		assert_eq!(0.001f32, kalman.q_angle);
 	}
 
-	let result: Kalman = kalman.q_angle(0.5f32); {
+	let result = kalman.q_angle(0.5f32); {
 		assert_eq!(0.5f32, result.q_angle);
 	}
 
@@ -48,11 +49,11 @@ fn mutable_kalman_q_angle() {
 #[test]
 fn mutable_kalman_q_bias() {
 
-	let kalman: Kalman = Kalman::new(); {
-		assert_eq!(0.0f32, kalman.q_bias);
+	let kalman = Kalman::new(); {
+		assert_eq!(0.003f32, kalman.q_bias);
 	}
 
-	let result: Kalman = kalman.q_bias(0.5f32); {
+	let result = kalman.q_bias(0.5f32); {
 		assert_eq!(0.5f32, result.q_bias);
 	}
 
@@ -61,11 +62,11 @@ fn mutable_kalman_q_bias() {
 #[test]
 fn mutable_kalman_r_measure() {
 
-	let kalman: Kalman = Kalman::new(); {
-		assert_eq!(0.0f32, kalman.r_measure);
+	let kalman = Kalman::new(); {
+		assert_eq!(0.03f32, kalman.r_measure);
 	}
 
-	let result: Kalman = kalman.r_measure(0.5f32); {
+	let result = kalman.r_measure(0.5f32); {
 		assert_eq!(0.5f32, result.r_measure);
 	}
 
