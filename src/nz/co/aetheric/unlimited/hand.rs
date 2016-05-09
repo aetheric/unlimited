@@ -3,6 +3,7 @@
 use nz::co::aetheric::util::kalman::Kalman;
 use nz::co::aetheric::util::point::Point2;
 use nz::co::aetheric::util::point::Point3;
+use nz::co::aetheric::unlimited::consts::*;
 
 pub struct UH {
 
@@ -58,46 +59,55 @@ pub struct UH {
 
 }
 
+impl Default for UH {
 
-impl UH {
-
-	pub fn new() -> UH {
-		UH {
+	pub fn default() -> UH {
+		return UH {
 			// stuff
 		}
 	}
+
+}
+
+
+impl UH {
 
 	///////////////////////////////////////////////////////////////////////////////
 	// MPU6050 FUNCTIONS for the Acceleration and the Gyro                        //
 	///////////////////////////////////////////////////////////////////////////////
 	/**  Function: MPU6050_read        ***************************/
-	pub fn MPU6050_read(regAddr: u8, &buffer: u8, size: i32) -> i32 {
+	pub fn MPU6050_read(&self, regAddr: u8, &buffer: u8, size: i32) -> i32 {
 
 		let n1 = i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE);
 		let n2 = i2c_write(regAddr);
 		i2c_stop();
+
 		/*
 		Serial.println (regAddr, HEX);
 		Serial.print (n1);
 		Serial.print ("___rd___");
 		Serial.println (n2);
 		*/
+
 		delay (50);
-		let r: i32 = 0;
+		let mut r: i32 = 0;
 		while (r < (size - 1)) {
 			i2c_start(MPU6050_I2C_ADDRESS | I2C_READ);
 			buffer[r] = i2c_read (false);
 			i2c_stop();
-			r++;
+			r += 1;
 		}
+
 		i2c_start(MPU6050_I2C_ADDRESS | I2C_READ);
 		buffer[r] = i2c_read (true);
 		i2c_stop();
+
 		return (0);  // return : no error
-	};
+
+	}
 
 	/**  Function: MPU6050_read_one    ***************************/
-	pub fn MPU6050_read_one(uint8_t regAddr) -> int {
+	pub fn MPU6050_read_one(&self, regAddr: u8) -> int {
 
 		//read high byte at first address
 		let n1: i32 = i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE);
@@ -110,11 +120,18 @@ impl UH {
 
 		return oneByte;  // return byte value
 
-	};
+	}
 
 	/**  Function: MPU6050_read_two    ***************************/
-	pub fn MPU6050_read_two(uint8_t regAddr) -> int {
-		i: i32, n, n1, n2, error, hByte, lByte, buffer;
+	pub fn MPU6050_read_two(&self, regAddr: u8) -> i32 {
+		let i: i32;
+		let n: i32;
+		let n1: i32;
+		let n2: i32;
+		let error: i32;
+		let hByte: i32;
+		let lByte: i32;
+		let buffer: i32;
 
 		//read high byte at first address
 		n1 = i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE);
@@ -124,7 +141,7 @@ impl UH {
 		i2c_start(MPU6050_I2C_ADDRESS | I2C_READ);
 		hByte = i2c_read (false); //read high byte
 		i2c_stop();
-		regAddr++;
+		regAddr += 1;
 
 		//read low byte at next address
 		n1 = i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE);
@@ -139,48 +156,46 @@ impl UH {
 		buffer = hByte | lByte;
 
 		return buffer;  // return
-	};
+	}
 
 	/**  Function: MPU6050_write_one    ***************************/
-	pub fn MPU6050_write_one(regAddr: i32, pData: i32) -> int {
-		i: i32;
-		n: i32;
-		n1: i32;
-		n2: i32
-		error: i32;
+	pub fn MPU6050_write_one(&self, regAddr: i32, pData: i32) -> int {
 
 		//Serial.println ("start write");
 		//Wire.beginTransmission(MPU6050_I2C_ADDRESS);
-		if(!i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE)){
+		if(!self.i2c_start(MPU6050_I2C_ADDRESS | I2C_WRITE)){
 			return false;
 		}
 
 		// write the start address
-		if(!i2c_write(regAddr)){
+		if(!self.i2c_write(regAddr)) {
 			return false;
 		}
 
-		if (!i2c_write(pData)){
+		if (!self.i2c_write(pData)) {
 			return false;
 		}
 
-		i2c_stop();
+		self.i2c_stop();
 		return (3);
-	};
+
+	}
 
 	/**  Function: MPU6050_write_one    ***************************/
-	pub fn setupAcceleGyro(){
-		TWBR = ((F_CPU / 400000L) - 16) / 2; // Set I2C frequency to 400kHz
+	pub fn setupAcceleGyro(&self) {
+
+		let TWBR = ((F_CPU / 400000f64) - 16) / 2; // Set I2C frequency to 400kHz
+
 		if (!i2c_init()) {
 			//Serial.println(F("Initialization error. SDA or SCL are low"));
 		} else {
 			//Serial.println(F("...done"));
 		}
 
-		while (!Serial);  //according to docs this holds until serial is open, this does not appear to work
+		//while (!Serial);  //according to docs this holds until serial is open, this does not appear to work
 
-		uint8_t c;
-		error: i32 = MPU6050_read (MPU6050_WHO_AM_I, &c, 1);
+		let c: u8;
+		let error1: i32 = self.MPU6050_read(MPU6050_WHO_AM_I, &c, 1);
 		//Serial.print(F("WHO_AM_I : "));
 		//Serial.print(c,HEX);
 
@@ -191,7 +206,7 @@ impl UH {
 		// should read a '1'.
 		// That bit has to be cleared, since the sensor
 		// is in sleep mode at power-up.
-		error = MPU6050_read (MPU6050_PWR_MGMT_1, &c, 1);
+		let error2 = self.MPU6050_read(MPU6050_PWR_MGMT_1, &c, 1);
 		/*
 		Serial.print(F("PWR_MGMT_1 : "));
 		Serial.print(c,HEX);
@@ -200,23 +215,24 @@ impl UH {
 		*/
 
 		//from multiwii  set up 6050
-		delay(100);
-		MPU6050_write_one(0x6B, B10000000);             //PWR_MGMT_1    -- DEVICE_RESET 1
-		delay(100);
-		MPU6050_write_one(0x6B, 0);             //PWR_MGMT_1    -
-		delay(100);
+		self.delay(100);
+		self.MPU6050_write_one(0x6B, B10000000);             //PWR_MGMT_1    -- DEVICE_RESET 1
+		self.delay(100);
+		self.MPU6050_write_one(0x6B, 0);             //PWR_MGMT_1    -
+		self.delay(100);
 
-		error = MPU6050_read (MPU6050_PWR_MGMT_1, &c, 1);
+		let error3 = self.MPU6050_read(MPU6050_PWR_MGMT_1, &c, 1);
 		/*
 		Serial.print(F("PWR_MGMT_1 : "));
 		Serial.print(c,HEX);
 		Serial.print(F(", error = "));
 		Serial.println(error,DEC);
 		*/
-	};
+	}
 
 	/**  Function: initAccelGyroKalman    ***************************/
-	pub fn initAccelGyroKalman(uint32_t initTime, accelRawValues: i32[]){
+	pub fn initAccelGyroKalman(&self, initTime: u32, accelRawValues: Point3<i32>) {
+
 		accX = accelRawValues[0];
 		accY = accelRawValues[1];
 		accZ = accelRawValues[2];
@@ -229,17 +245,19 @@ impl UH {
 			pitch = atan2(-accX, accZ) * RAD_TO_DEG;
 		}
 
-		kalmanX.setAngle(roll); // Set starting angle
-		kalmanY.setAngle(pitch);
-		gyroXangle = roll;
-		gyroYangle = pitch;
-		compAngleX = roll;
-		compAngleY = pitch;
-		timer = initTime;
+		self.kalmanX.setAngle(roll); // Set starting angle
+		self.kalmanY.setAngle(pitch);
+		self.gyroXangle = roll;
+		self.gyroYangle = pitch;
+		self.compAngleX = roll;
+		self.compAngleY = pitch;
+		self.timer = initTime;
+
 	}
 
 	/**  Function: readAccelGyro_XY_Kalman    ***************************/
-	pub fn readAccelGyro_XYZ_Kalman(accelRawValues: i32[], gyroRawValues: i32[], angleXYZ: i32[]){
+	pub fn readAccelGyro_XYZ_Kalman(&self, accelRawValues: Point3<i32>, gyroRawValues: Point3<i32>) {
+
 		/* Update all the values */
 		accX = accelRawValues[0];
 		accY = accelRawValues[1];
@@ -319,60 +337,35 @@ impl UH {
 	}
 
 	/**  Function: checkAccelGyro_XY_Kalman    ***************************/
-	pub fn checkAccelGyro_XYZ_Kalman(){
-		accelRaw: [ i32, 3 ];
-		readRawAccelValues(accelRaw);
-		gyroRaw: [ i32, 3 ];
-		readRawGyroValues(gyroRaw);
-		double temp = readTemperature();
-		angXYZ: [ i32, 3 ];
-		readAccelGyro_XYZ_Kalman(accelRaw, gyroRaw, angXYZ);
+	pub fn checkAccelGyro_XYZ_Kalman(&self) {
 
+		let accelRaw = readRawAccelValues();
+		let gyroRaw = readRawGyroValues();
+		let temp = readTemperature();
+		let angXYZ = readAccelGyro_XYZ_Kalman(accelRaw, gyroRaw);
 
-		Serial.print(angXYZ[0], DEC);//AcX =
-		Serial.print(", "); Serial.print(angXYZ[1], DEC);// | AcY =
-		Serial.print(", "); Serial.print(angXYZ[2], DEC);// | AcZ =
-		Serial.print(", "); Serial.print(temp, 3);  //temperature
-		Serial.print(", "); Serial.print(gyroRaw[0], DEC);
-		Serial.print(", "); Serial.print(gyroRaw[1], DEC);
-		Serial.print(", "); Serial.println(gyroRaw[2], DEC);
+		Serial.print(angXYZ.x, DEC);//AcX =
+		Serial.print(", ");
+
+		Serial.print(angXYZ.y, DEC);// | AcY =
+		Serial.print(", ");
+
+		Serial.print(angXYZ.z, DEC);// | AcZ =
+		Serial.print(", ");
+
+		Serial.print(temp, 3);  //temperature
+		Serial.print(", ");
+
+		Serial.print(gyroRaw.x, DEC);
+		Serial.print(", ");
+
+		Serial.print(gyroRaw.y, DEC);
+		Serial.print(", ");
+
+		Serial.println(gyroRaw.z, DEC);
+
 		delay(1);
-		/*
-		accelRaw[0] = (int)kalAngleX;
-		accelRaw[1] =(int)kalAngleY;
-		accelRaw[2] =(int)gyroZangle;
 
-		Serial.print(accelRaw[0], DEC);//AcX =
-		  Serial.print(", "); Serial.print(accelRaw[1], DEC);// | AcY =
-		  Serial.print(", "); Serial.print(accelRaw[2], DEC);// | AcZ =
-		  Serial.print(", "); Serial.print(tempt, 3);  //temperature
-		  Serial.print(", "); Serial.print(gyroRaw[0], DEC);
-		  Serial.print(", "); Serial.print(gyroRaw[1], DEC);
-		  Serial.print(", "); Serial.println(gyroRaw[2], DEC);
-		  delay(1);
-		  */
-
-	}
-
-	/**  Function: checkAccelGyro_XY_Kalman_test    ***************************/
-	pub fn checkAccelGyro_XYZ_Kalman_test(){
-		accelRaw: [ i32, 3 ];
-		readRawAccelValues(accelRaw);
-		gyroRaw: [ i32, 3 ];
-		readRawGyroValues(gyroRaw);
-		double temp = readTemperature();
-		angXYZ: [ i32, 3 ];
-		readAccelGyro_XYZ_Kalman(accelRaw, gyroRaw, angXYZ);
-
-
-		Serial.print(angXYZ[0], DEC);//AcX =
-		Serial.print('\t'); Serial.print(angXYZ[1], DEC);// | AcY =
-		Serial.print('\t'); Serial.print(angXYZ[2], DEC);// | AcZ =
-		Serial.print('\t'); Serial.print(temp, 3);  //temperature
-		Serial.print('\t'); Serial.print(gyroRaw[0], DEC);
-		Serial.print('\t'); Serial.print(gyroRaw[1], DEC);
-		Serial.print('\t'); Serial.println(gyroRaw[2], DEC);
-		delay(1);
 		/*
 		accelRaw[0] = (int)kalAngleX;
 		accelRaw[1] =(int)kalAngleY;
@@ -391,53 +384,63 @@ impl UH {
 	}
 
 	/**  Function: readRawAccelValues    ***************************/
-	pub fn readRawAccelValues(AccelRawValue: i32[]){
-		AccelRawValue[0]= MPU6050_read_two (MPU6050_ACCEL_XOUT_H);
-		AccelRawValue[1]= MPU6050_read_two (MPU6050_ACCEL_YOUT_H);
-		AccelRawValue[2]= MPU6050_read_two (MPU6050_ACCEL_ZOUT_H);
+	pub fn readRawAccelValues(&self) -> Point3<i32> {
+		return = Point3<i32> {
+			x: self.MPU6050_read_two(MPU6050_ACCEL_XOUT_H),
+			y: self.MPU6050_read_two(MPU6050_ACCEL_YOUT_H),
+			z: self.MPU6050_read_two(MPU6050_ACCEL_ZOUT_H)
+		};
 	};
 
 	/**  Function: checkRawAccelValues    ***************************/
-	pub fn checkRawAccelValues(){
-		AccelRawVal: [ i32, 3 ];
-		AccelRawVal[0]= MPU6050_read_two (MPU6050_ACCEL_XOUT_H);
-		AccelRawVal[1]= MPU6050_read_two (MPU6050_ACCEL_YOUT_H);
-		AccelRawVal[2]= MPU6050_read_two (MPU6050_ACCEL_ZOUT_H);
-		Serial.print(AccelRawVal[0], DEC);//AcX =
-		Serial.print(", "); Serial.print(AccelRawVal[1], DEC);// | AcY =
-		Serial.print(", "); Serial.print(AccelRawVal[2], DEC);// | AcZ =
+	pub fn checkRawAccelValues(&self) {
+
+		let AccelRawVal = self.readRawAccelValues();
+
+		Serial.print(AccelRawVal.x, DEC);//AcX =
+		Serial.print(", ");
+
+		Serial.print(AccelRawVal.y, DEC);// | AcY =
+		Serial.print(", ");
+
+		Serial.print(AccelRawVal.z, DEC);// | AcZ =
+
 	}
 
 	/**  Function: readRawGyroValues    ***************************/
-	pub fn readRawGyroValues(GyroRawValue: i32[]){
-		GyroRawValue[0]= MPU6050_read_two (MPU6050_GYRO_XOUT_H);
-		GyroRawValue[1]= MPU6050_read_two (MPU6050_GYRO_YOUT_H);
-		GyroRawValue[2]= MPU6050_read_two (MPU6050_GYRO_ZOUT_H);
+	pub fn readRawGyroValues(&self) -> Point3<i32> {
+		return Point3<i32> {
+			x: self.MPU6050_read_two(MPU6050_GYRO_XOUT_H),
+			y: self.MPU6050_read_two(MPU6050_GYRO_YOUT_H),
+			z: self.MPU6050_read_two(MPU6050_GYRO_ZOUT_H)
+		};
 	};
 
 	/**  Function: checkRawGyroValues    ***************************/
-	pub fn checkRawGyroValues(){
-		GyroRawVal: [ i32, 3 ];
-		GyroRawVal[0]= MPU6050_read_two (MPU6050_GYRO_XOUT_H);
-		GyroRawVal[1]= MPU6050_read_two (MPU6050_GYRO_YOUT_H);
-		GyroRawVal[2]= MPU6050_read_two (MPU6050_GYRO_ZOUT_H);
-		Serial.print(", "); Serial.print(GyroRawVal[0], DEC);
-		Serial.print(", "); Serial.print(GyroRawVal[1], DEC);
-		Serial.print(", "); Serial.print(GyroRawVal[2], DEC);
-	};
+	pub fn checkRawGyroValues(&self) {
+
+		let GyroRawVal = self.readRawGyroValues();
+
+		Serial.print(GyroRawVal.x, DEC);
+		Serial.print(", ");
+
+		Serial.print(GyroRawVal.y, DEC);
+		Serial.print(", ");
+
+		Serial.print(GyroRawVal.z, DEC);
+
+	}
 
 	/**  Function: readTemperature    ***************************/
-	double readTemperature(){
-		tempRaw: i32 = MPU6050_read_two (MPU6050_TEMP_OUT_H);
-		double calcTemp = ((double) tempRaw + 12412.0) / 340.0;
-		return calcTemp;
-	};
+	pub fn readTemperature(&self) -> f64 {
+		let tempRaw = self.MPU6050_read_two(MPU6050_TEMP_OUT_H) as f64;
+		return (tempRaw + 12412.0f64) / 340.0f64;
+	}
 
 	/**  Function: checkTemperature    ***************************/
-	pub fn checkTemperature(){
-		tempRaw: i32 = MPU6050_read_two (MPU6050_TEMP_OUT_H);
-		double calcTemp = ((double) tempRaw + 12412.0) / 340.0;
-		Serial.print(", "); Serial.print(calcTemp, 3);  //temperature
+	pub fn checkTemperature(&self) {
+		Serial.print(", ");
+		Serial.print(self.readTemperature(), 3);  //temperature
 	};
 
 
@@ -446,26 +449,26 @@ impl UH {
 	///////////////////////////////////////////////////////////////////////////////
 
 	/**  Function: setupVibrationMotor    ***************************/
-	pub fn setupVibrationMotor(){
-		pinMode(vibrationMotor_PIN, OUTPUT);
-		digitalWrite(vibrationMotor_PIN, HIGH);
+	pub fn setupVibrationMotor(&self) {
+		self.pinMode(vibrationMotor_PIN, OUTPUT);
+		self.digitalWrite(vibrationMotor_PIN, HIGH);
 	}
 
 	/**  Function: moveVibrationMotor    ***************************/
-	pub fn moveVibrationMotor(mTime: i32){
-		digitalWrite(vibrationMotor_PIN, LOW);
-		delay(mTime);
-		digitalWrite(vibrationMotor_PIN, HIGH);
+	pub fn moveVibrationMotor(&self, mTime: i32) {
+		self.digitalWrite(vibrationMotor_PIN, LOW);
+		self.delay(mTime);
+		self.digitalWrite(vibrationMotor_PIN, HIGH);
 	}
 
 	/**  Function: onVibrationMotor    ***************************/
-	pub fn onVibrationMotor(){
-		digitalWrite(vibrationMotor_PIN, LOW);
+	pub fn onVibrationMotor(&self) {
+		self.digitalWrite(vibrationMotor_PIN, LOW);
 	}
 
 	/**  Function: offVibrationMotor    ***************************/
-	pub fn offVibrationMotor(){
-		digitalWrite(vibrationMotor_PIN, HIGH);
+	pub fn offVibrationMotor(&self) {
+		self.digitalWrite(vibrationMotor_PIN, HIGH);
 	}
 
 
@@ -474,43 +477,49 @@ impl UH {
 	///////////////////////////////////////////////////////////////////////////////
 
 	/**  Function: readPR    ***************************/
-	readPR: i32(channel: i32){
+	pub fn readPR(&self, channel: i32) -> i32 {
 		return analogRead(channel);
 	}
 
 	/**  Function: readPR    ***************************/
-	pub fn readPR(PRValues: i32[]){
-		for(i: i32 = 0; i < PR_CH_NUM; i ++){
+	pub fn readPR(&self, PRValues: [ i32, PR_CH_NUM ]) {
+		for (i: i32 = 0; i < PR_CH_NUM; i++) {
 			PRValues[i] = readPR(i);
 			delay(1);
 		}
 	}
 
 	/**  Function: checkPR    ***************************/
-	pub fn checkPR(){
+	pub fn checkPR(&self) {
+
 		//Loop through and read all 8 values
 		//Reports back Value at channel 6 is: 346
-		for(i: i32 = 0; i < PR_CH_NUM; i ++){
+		for(i: i32 = 0; i < PR_CH_NUM; i ++) {
 			Serial.print(String(readPR(i)));
 			Serial.print(",");
 			delay(1);
 		}
+
 		Serial.println("");
+
 	}
 
 	/**  Function: checkPR    ***************************/
-	pub fn checkPR_test(){
+	pub fn checkPR_test(&self) {
+
 		//Loop through and read all 8 values
 		//Reports back Value at channel 6 is: 346
-		for(i: i32 = 0; i < PR_CH_NUM; i ++){
+		for (i: i32 = 0; i < PR_CH_NUM; i ++) {
 			Serial.print(String(readPR(i)));
 			Serial.print('\t');
 			delay(1);
 		}
+
 		Serial.println("");
+
 	}
 
-	pub fn initPR(){
+	pub fn initPR(&self) {
 		pinMode(PR_LED_PIN, OUTPUT);
 		digitalWrite(PR_LED_PIN, LOW);
 	}
@@ -522,35 +531,23 @@ impl UH {
 
 	//10進数をマルチプレクサの2進数に変換し，マルチプレクサに信号を送る関数
 	/**  Function: connectMUX    ***************************/
-	pub fn connectMUX(num: i32){
-		dec2bin: i32[] = {0, 0, 0, 0};//objects for the function:connectMUX
-		for(i: i32=0;num>0;i++){
-			dec2bin[i] = num%2;
+	pub fn connectMUX(&self, num: i32){
+
+		//objects for the function:connectMUX
+		let mut dec2bin: [ i32; 4 ] = [ 0, 0, 0, 0 ];
+		for (i: i32 = 0; num > 0; i++) {
+			dec2bin[i] = num % 2;
 			num = num/2;
 		}
 
-		if(dec2bin[0]==1){
-			digitalWrite(EMS_S0_PIN, HIGH);
-		} else {
-			digitalWrite(EMS_S0_PIN, LOW);
-		}
-
-		if(dec2bin[1]==1){
-			digitalWrite(EMS_S1_PIN, HIGH);
-		} else {
-			digitalWrite(EMS_S1_PIN, LOW);
-		}
-
-		if(dec2bin[2]==1){
-			digitalWrite(EMS_S2_PIN, HIGH);
-		} else {
-			digitalWrite(EMS_S2_PIN, LOW);
-		}
+		digitalWrite(EMS_S0_PIN, HIGH if dec2bin[0] == 1 else LOW);
+		digitalWrite(EMS_S1_PIN, HIGH if dec2bin[1] == 1 else LOW);
+		digitalWrite(EMS_S2_PIN, HIGH if dec2bin[2] == 1 else LOW);
 
 	}
 
 	/**  Function: keepVoltage    ***************************/
-	/*void keepVoltage(volNum: i32) {
+	/*pub fn keepVoltage(volNum: i32) {
 		if (MIN_VOL <= volNum && volNum <= MAX_VOL) {
 			stockVolTime: i32 = f[volNum];
 			loopNum: i32 = 1500 / stockVolTime;
@@ -564,24 +561,28 @@ impl UH {
 	}*/
 
 	/**  Function: keepVoltage    ***************************/
-	pub fn keepVoltage(volNum: i32) {
+	pub fn keepVoltage(&self, volNum: i32) {
 		if (MIN_VOL <= volNum && volNum <= MAX_VOL) {
-			stockVolTime: i32 = relation_V_Delay[volNum];
+			let stockVolTime: i32 = relation_V_Delay[volNum];
 			//loopNum: i32 = (relation_V_Delay[0] * 2) / stockVolTime;
-			loopNum: i32 = 100 / stockVolTime;
+			let loopNum: i32 = 100 / stockVolTime;
 			for (i: i32 = 0; i < loopNum; i++) {
+
 				digitalWrite(BOOSTER_SWITCH_PIN, HIGH);
 				delayMicroseconds(stockVolTime * 20);
 				//delay(stockVolTime);
+
 				digitalWrite(BOOSTER_SWITCH_PIN, LOW);
 				delayMicroseconds(stockVolTime * 20);
 				//delay(stockVolTime);
+
 			}
 		}
 	}
 
 	/**  Function: initEMS    ***************************/
-	pub fn initEMS(){
+	pub fn initEMS(&self) {
+
 		//set up the EMS MUX pins
 		pinMode(EMS_EN_PIN, OUTPUT);
 		pinMode(EMS_S0_PIN, OUTPUT);
@@ -600,30 +601,30 @@ impl UH {
 		currentEMSChannel = -1;
 		EMSTimeCount = -1;
 		currentVol = 11;
+
 	}
 
 	/**  Function: setStimulationTime    ***************************/
-	pub fn setStimulationTime(){
-		EMSTimeCount = stimuTimeCount;
+	pub fn setStimulationTime(&self) -> UH {
+		return UH { ems_time_count: self.stimu_time_count, .. *self }
 	}
 
 	/**  Function: setStimulationTime    ***************************/
-	pub fn setStimulationTime(t: i32){
-		EMSTimeCount = t;
+	pub fn setStimulationTime(&self, time: i32) -> UH {
+		return UH { ems_time_count: time, .. *self }
 	}
 
 	/**  Function: setStimulationChannel    ***************************/
-	pub fn setStimulationChannel(channel: i32){
-		if(-1 <= channel && channel < 8){
-			currentEMSChannel = channel;
-		}
+	pub fn setStimulationChannel(&self, channel: i32) {
+		return *self if ( 8 <= channel || channel < -1 )
+			else UH { current_ems_channel: channel, .. *self };
 	}
 
-	pub fn setStimulationVoltage(vol: i32){
+	pub fn setStimulationVoltage(&self, vol: i32){
 		currentVol = vol;
 	}
 
-	pub fn updateEMS() {
+	pub fn updateEMS(&self) {
 		if (0<=EMSTimeCount) {//刺激する電極がある場合
 			connectMUX(currentEMSChannel);
 			digitalWrite(EMS_EN_PIN, HIGH);//マルチプレクサの準備
@@ -639,7 +640,7 @@ impl UH {
 		}
 	}
 
-	pub fn updateEMS_HiVoltage() {
+	pub fn updateEMS_HiVoltage(&self) {
 		if (0<=EMSTimeCount) {//刺激する電極がある場合
 			connectMUX(currentEMSChannel);
 			digitalWrite(EMS_EN_PIN, HIGH);//マルチプレクサの準備
@@ -658,7 +659,7 @@ impl UH {
 		}
 	}
 
-	pub fn setEMS_LOW(){
+	pub fn setEMS_LOW(&self) {
 		digitalWrite(BOOSTER_SWITCH_PIN, LOW);
 		digitalWrite(EMS_EN_PIN, LOW);
 		digitalWrite(EMS_S0_PIN, LOW);

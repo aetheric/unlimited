@@ -1,3 +1,3 @@
 mod consts;
-//pub mod hand;
+pub mod hand;
 //mod hand_spec;
